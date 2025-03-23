@@ -63,6 +63,23 @@
                                 });
 
                                 previouslyClickedCountry = layer; // Store reference to the currently clicked country
+
+                                // Send country name to the server
+                                fetch("/country-clicked", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "text/plain"
+                                },
+                                body: countryName
+                                })
+                                .then(response => response.text())
+                                .then(data => {
+                                    console.log("Response from server:", data); // logs the response from the server to the console.
+                                })
+                                .catch(error => {
+                                    console.error("Error:", error);
+                                });
+
                             });
                         },
                         style: {
@@ -84,9 +101,12 @@
 
         // add all country labels to the map using the pane 'labels' so they are on top of the countries but not clickable.
         var positronLabels = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png', {
-                attribution: '©OpenStreetMap, ©CartoDB',
+                attribution: 'ï¿½OpenStreetMap, ï¿½CartoDB',
                 pane: 'labels'
         }).addTo(map);
+
+        // This is an example of how to get a specific country from the countryClicker object.
+        // It stays here for now in case need of future refrence.
 
         // const afghanistan = countryClicker.getCountry("Afghanistan");
 
