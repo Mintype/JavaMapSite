@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="ISO-8859-1">
+    <title>Demo: Leaflet.CountrySelect</title>
+
+    <!-- These commented library imports are the modern ones. We are using outdated libraries as the official documentation is outdated as well. -->
+    <!-- <link rel="stylesheet" href="https://unpkg.com/leaflet@0.7.7/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@0.7.7/dist/leaflet.js"></script> -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="/static/Leaflet.CountrySelect.js"></script>
+
+</head>
+
+<style>
+    html, body, #map {
+        padding: 0px;
+        margin: 0px;
+        height: 100%;
+        width: 100%;
+    }
+</style>
+
+<script>
+    function init(){
+        // This creates a base layer with CartoDB tiles.
+        var baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',{attribution: 'Tiles &copy; CartoDB'});
+        var map = L.map("map",{layers: [baseLayer], center: [51.509, -0.08], zoom: 4});
+
+        // we are using this to add the countries to the map.
+        // exclude is used to exclude the country with the name "French Southern and Antarctic Lands" from the map.
+        var countryClicker = L.countrySelect({exclude:["Fiji", "French Southern and Antarctic Lands", 'New Caledonia', 'Vanuatu', 'Solomon Islands', 'East Timor']});
+
+        var countries = countryClicker.getCountries();
+
+        // Store previously clicked country to reset its style later.
+        var previouslyClickedCountry = null;
+
+        // This makes each country clickable and logs the country name to the console when clicked.
+        // Also adds the layer of each country to the map.
+        var countryLayers = {};
+        for (var countryCode in countries) {
+            if (countries.hasOwnProperty(countryCode)) {
+                var country1 = countries[countryCode];
+                const countryName = country1.properties.name;
+                var country = L.geoJson(country1,{
+                        onEachFeature: function(feature, layer) {
+                            layer.on('click', function() {
+                                // Reset style of the previously clicked country
+                                if (previouslyClickedCountry) {
+                                    previouslyClickedCountry.setStyle({
+                                        color: '#3388ff',
+                                        fillColor: '#3388ff',
+                                        fillOpacity: 0.5
+                                    });
+                                }
+                                // Change style of the clicked country to red
+                                layer.setStyle({
+                                    color: 'red',
+                                    fillColor: 'red',
+                                    fillOpacity: 0.7
+                                });
+
+                                previouslyClickedCountry = layer; // Store reference to the currently clicked country
+                            });
+                        },
+                        style: {
+                            color: '#3388ff',
+                            fillColor: '#3388ff',
+                            fillOpacity: 0.5
+                        }
+                    }).bindPopup('Country: ' + countryName); // Bind a popup with the country name to each country layer
+                countryLayers[countryCode] = country;
+                map.addLayer(country);
+            }
+        }
+
+        map.createPane('labels');
+
+        // This pane is above hopefully everything.
+        map.getPane('labels').style.zIndex = 650;
+        map.getPane('labels').style.pointerEvents = 'none'; // makes labels not clickable.
+
+        // add all country labels to the map using the pane 'labels' so they are on top of the countries but not clickable.
+        var positronLabels = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png', {
+                attribution: '©OpenStreetMap, ©CartoDB',
+                pane: 'labels'
+        }).addTo(map);
+
+        // const afghanistan = countryClicker.getCountry("Afghanistan");
+
+        // var country = L.geoJson(afghanistan, {
+        // 	onEachFeature: function(feature, layer) {
+        // 		layer.on('click', function() {
+        // 		console.log(feature.properties.name); // logs the country name when clicked
+        // 		});
+        // 	},
+        // 	style: {color: 'blue', fillColor: 'blue', fillOpacity: 0.5}
+        // }).bindPopup('Country: ' + afghanistan.properties.name).addTo(map); // Bind a popup with the country name to each country layer
+    }
+</script>
+
+<body onload="init()">
+<div id="map"></div>
+</body>
+</html>
